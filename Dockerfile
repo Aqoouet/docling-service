@@ -13,9 +13,20 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 COPY requirements.txt .
 
-# Install Docling and FastAPI.  torch CPU-only wheel is pulled transitively by
-# docling; set PIP_NO_CACHE_DIR to save layer space.
-RUN pip install --no-cache-dir -r requirements.txt
+# Install torch CPU-only first from the official PyTorch index.
+# The CPU wheel (~260 MB) is smaller than the default CUDA wheel (~530 MB)
+# from PyPI and served faster from download.pytorch.org.
+# This also avoids pip choosing a CUDA build on a CPU-only host.
+# --timeout 600: raise pip's socket read timeout so that large wheels
+#   (torch ~260 MB, opencv ~73 MB, scipy ~35 MB) can finish downloading
+#   on a slow connection without a ReadTimeoutError.
+RUN pip install --no-cache-dir --timeout 600 \
+        torch \
+        --index-url https://download.pytorch.org/whl/cpu
+
+# Install Docling and FastAPI (torch is already satisfied, so pip won't
+# re-download it from PyPI).
+RUN pip install --no-cache-dir --timeout 600 -r requirements.txt
 
 # Pre-download Docling models so the first request is fast.
 # The models are cached to ~/.cache/docling inside the image.
