@@ -1,11 +1,8 @@
+# Official [Docling Serve](https://github.com/docling-project/docling-serve) image only — no local build.
+# API is v1 (e.g. POST /v1/convert/source), not this repo’s POST /convert multipart shim.
 services:
-  docling-service:
-    # On the server: set DOCLING_SERVICE_IMAGE to your registry image and run `make pull up`.
-    # Local dev without a registry: omit the variable (defaults to docling-service:local) and run `make up-local`.
-    image: ${DOCLING_SERVICE_IMAGE:-docling-service:local}
-    build:
-      context: .
-      dockerfile: Dockerfile
+  docling-serve:
+    image: ${DOCLING_SERVICE_IMAGE:-ghcr.io/docling-project/docling-serve-cpu:latest}
     ports:
-      - "${HOST_PORT:-8001}:8000"
+      - "${HOST_PORT:-5001}:5001"
     restart: unless-stopped

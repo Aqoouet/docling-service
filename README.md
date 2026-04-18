@@ -52,16 +52,31 @@ curl -F "file=@path/to/report.docx" http://localhost:8001/convert | python -m js
 
 ---
 
-## Docker
+## Docker (official Docling Serve)
+
+Compose uses the upstream **CPU** image only (no local `build`). Default:
+`ghcr.io/docling-project/docling-serve-cpu:latest` ([images](https://github.com/docling-project/docling-serve#container-images)).
+
+```bash
+docker compose pull
+docker compose up -d
+```
+
+The API listens on **port 5001** (mapped to host `HOST_PORT`, default `5001`). See [Docling Serve](https://github.com/docling-project/docling-serve) for the v1 API (e.g. `POST /v1/convert/source`). This is **not** the same as the `POST /convert` multipart API implemented in `main.py` in this repo.
+
+Optional: `export DOCLING_SERVICE_IMAGE=quay.io/docling-project/docling-serve-cpu:latest` before `docker compose pull`.
+
+### Alternative: build this repo’s FastAPI shim
+
+If you need the drop-in `POST /convert` multipart service (e.g. for `report_checking` as documented below):
 
 ```bash
 docker build -t docling-service .
 docker run -p 8001:8000 docling-service
 ```
 
-> **Note:** The Docker image is large (~4–6 GB) because `docling` pulls
-> `torch` as a transitive dependency. Models are pre-downloaded during the
-> build so the first request is fast.
+> **Note:** That image is large (~4–6 GB) because `docling` pulls `torch`.
+> The Dockerfile pre-downloads models during the build so the first request is fast.
 
 ---
 
@@ -79,5 +94,7 @@ Docling's built-in text-layer extraction (no OCR, no GPU required).
 ## Integration with report_checking
 
 Set `USE_DOCLING=true` and `DOCLING_URL=http://docling:8000` in the
-`report_checking` backend environment. The backend will send `.docx` files
-here before the LLM-based checkpoint pipeline.
+`report_checking` backend environment **when using this repository’s built
+container** (`POST /convert` on port 8000). The official Docling Serve
+Compose service uses port **5001** and a different API; use the built shim
+above unless the backend is updated for Docling Serve v1.
