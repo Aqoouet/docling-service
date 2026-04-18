@@ -1,0 +1,11 @@
+services:
+  docling-service:
+    # On the server: set DOCLING_SERVICE_IMAGE to your registry image and run `make pull up`.
+    # Local dev without a registry: omit the variable (defaults to docling-service:local) and run `make up-local`.
+    image: ${DOCLING_SERVICE_IMAGE:-docling-service:local}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${HOST_PORT:-8001}:8000"
+    restart: unless-stopped
